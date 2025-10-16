@@ -16,7 +16,6 @@ const char *ssid = "webServer";
 const char *password = "12345678";
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1); 
-
 //instanciation of server
 DNSServer dnsServer;
 WebServer server(80);
@@ -31,8 +30,10 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div id="serial_dataPanel">
             Distance from sensor (cm):<label></label>
             Distance from sensor (in):<label></label>
+            <p></p>
             Acceleration(m/s^2):
             x: <label></label>y: <label></label> z:<label></label>
+            <p></p>
             Gyro(rad/s):
             x: <label></label>y: <label></label> z:<label></label>
             temperature:
@@ -142,15 +143,15 @@ void setupWebServer(void){
   Serial.println("Wi-Fi AP started at 192.168.4.1");
   dnsServer.start(DNS_PORT, "*", apIP);
   delay(100);
-  // Print local IP address and start web server
   Serial.println(F(""));
   IPAddress myIP = WiFi.softAPIP();
   Serial.print(F("AP IP address: "));
   Serial.println(myIP);
-  server.on("/", handleAllRequests);
+  server.on("/",HTTP_GET,handleAllRequests);
   //handles serial toggle
   server.on("/toggle_serial",HTTP_GET, handleSerialToggle);
   server.onNotFound(handleAllRequests);//refresh the page upon error(not sure why)
+
   server.on("/serial_data",HTTP_GET, handleData);
   server.begin();
 }

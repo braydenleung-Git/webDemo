@@ -33,10 +33,10 @@ void setup(){
 }
 
 void loop(){
-  dnsServer.processNextRequest();
+  //dnsServer.processNextRequest();
   server.handleClient();
   triggerUltraSonics();
   triggerIMU();
-  //delay(1000);
+  delay(1000);
 }
 

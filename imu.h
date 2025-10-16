@@ -9,12 +9,12 @@ extern bool toggleSerial;
 
 void setupIMU(){
   // Try to initialize!
-  if (!sensor.begin()) {
-    Serial.println("Failed to find MPU6050 chip");
-    while (1) {
-      delay(10);
-    }
-  }
+  // if (!sensor.begin()) {
+  //   Serial.println("Failed to find MPU6050 chip");
+  //   while (1) {
+  //     delay(10);
+  //   }
+  // }
   Serial.println("MPU6050 Found!");
   /*
     Other range options: (+-n G,G = G-force)(normal people can sustain up to 4-6G before passing out!)
