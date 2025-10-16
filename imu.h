@@ -60,7 +60,19 @@ void triggerIMU(){
     g_z = g.gyro.z;
     //deg(C)
     temp_c = temp.temperature;
+    
+  }else{
+    a_x = 0;
+    a_y = 0;
+    a_z = 0;
+    g_x = 0;
+    g_y = 0;
+    g_z = 0;
+    temp_c = 0;
   }
+  Serial.println("Acceleration: \n"+"x: "+a_x+"\ny: "+a_y+"\nz: "+a_z);
+  Serial.println("Gyro: \n"+"x: "+g_x+"\ny: "+g_y+"\nz: "+g_z);
+  Serial.println("Temperature: "+temp_c);
   
 }
 
