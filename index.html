@@ -4,10 +4,14 @@
         <label>Click to toggle the serial</label>
         <button id='button'onclick="toggleSerial()" >Button</button>
         <div id="serial_dataPanel">
-            <p>Distance from sensor (cm):</p><label></label>
-            <p>Distance from sensor (in):</p><label></label>
-            <p>Acceleration:</p><label></label>
-
+            Distance from sensor (cm):<label></label>
+            Distance from sensor (in):<label></label>
+            Acceleration(m/s^2):
+            x: <label></label>y: <label></label> z:<label></label>
+            Gyro(rad/s):
+            x: <label></label>y: <label></label> z:<label></label>
+            temperature:
+            <label></label>
         </div>
     </body>
 
@@ -63,6 +67,13 @@
                 labels = document.querySelectorAll('label');
                 labels[1].innerText = cm;
                 labels[2].innerText = inch;
+                labels[3].innerText = a_x;
+                labels[4].innerText = a_y;
+                labels[5].innerText = a_z;
+                labels[6].innerText = g_x;
+                labels[7].innerText = g_y;
+                labels[8].innerText = g_z;
+                labels[9].innerText = temp;
             }catch (e){
                 console.error('Failed to update labels',e);
             }

@@ -1,9 +1,11 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <Wire.h> //Library that communicate to I2C-device 
-#include "web.h"
+
 
 Adafruit_MPU6050 sensor;
+float a_x, a_y, a_z, g_x,g_y,g_z, temp_c;
+extern bool toggleSerial;
 
 void setupIMU(){
   // Try to initialize!
@@ -43,31 +45,22 @@ void setupIMU(){
   sensor.setFilterBandwidth(MPU6050_BAND_5_HZ);
 }
 
-void readings(){
-  /* Get new sensor events with the readings */
-  sensors_event_t a, g, temp;
-  sensor.getEvent(&a, &g, &temp);
-
-  /* Print out the values */
-  // Serial.print("Acceleration X: ");
-  // Serial.print(a.acceleration.x);
-  // Serial.print(", Y: ");
-  // Serial.print(a.acceleration.y);
-  // Serial.print(", Z: ");
-  // Serial.print(a.acceleration.z);
-  // Serial.println(" m/s^2");
-
-  // Serial.print("Rotation X: ");
-  // Serial.print(g.gyro.x);
-  // Serial.print(", Y: ");
-  // Serial.print(g.gyro.y);
-  // Serial.print(", Z: ");
-  // Serial.print(g.gyro.z);
-  // Serial.println(" rad/s");
-
-  // Serial.print("Temperature: ");
-  // Serial.print(temp.temperature);
-  // Serial.println(" degC");
-  //Serial.println("");
-  //delay(500);
+void triggerIMU(){
+  if(toggleSerial){
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    sensor.getEvent(&a, &g, &temp);
+    //m/s^2
+    a_x = a.acceleration.x;
+    a_y = a.acceleration.y;
+    a_z = a.acceleration.z;
+    //rad/s
+    g_x = g.gyro.x;
+    g_y = g.gyro.y;
+    g_z = g.gyro.z;
+    //deg(C)
+    temp_c = temp.temperature;
+  }
+  
 }
+

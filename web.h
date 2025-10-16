@@ -8,11 +8,11 @@
 #include "imu.h"
 
 
-bool toggledSerial = false;
-extern float distanceCm;
-extern float distanceInch;
+bool toggleSerial = false;
+extern float distanceCm, distanceInch;
+extern float a_x, a_y, a_z, g_x,g_y,g_z, temp_c;
 extern void triggerUltraSonics(bool);
-const char *ssid = "MRoom";
+const char *ssid = "webServer";
 const char *password = "12345678";
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1); 
@@ -29,8 +29,14 @@ const char MAIN_page[] PROGMEM = R"=====(
         <label>Click to toggle the serial</label>
         <button id='button'onclick="toggleSerial()" >Button</button>
         <div id="serial_dataPanel">
-            <p>Distance from sensor (cm):</p><label></label>
-            <p>Distance from sensor (in):</p><label></label>
+            Distance from sensor (cm):<label></label>
+            Distance from sensor (in):<label></label>
+            Acceleration(m/s^2):
+            x: <label></label>y: <label></label> z:<label></label>
+            Gyro(rad/s):
+            x: <label></label>y: <label></label> z:<label></label>
+            temperature:
+            <label></label>
         </div>
     </body>
 
@@ -86,12 +92,19 @@ const char MAIN_page[] PROGMEM = R"=====(
                 labels = document.querySelectorAll('label');
                 labels[1].innerText = cm;
                 labels[2].innerText = inch;
+                labels[3].innerText = a_x;
+                labels[4].innerText = a_y;
+                labels[5].innerText = a_z;
+                labels[6].innerText = g_x;
+                labels[7].innerText = g_y;
+                labels[8].innerText = g_z;
+                labels[9].innerText = temp;
             }catch (e){
                 console.error('Failed to update labels',e);
             }
         }
-        //make it such that at each 1 second, it will call fetchSensorData, it should be in sync with the esp-32
-        setInterval(fetchSensorData,1000);
+        //make it such that at each .5 second, it will call fetchSensorData
+        setInterval(fetchSensorData,250);
     </script>
 </html>
 )=====";
@@ -99,7 +112,7 @@ const char MAIN_page[] PROGMEM = R"=====(
 
 void handleSerialToggle(){
   //toggledSerial = server.arg("state");
-  triggerUltraSonics(toggledSerial);
+  triggerUltraSonics(toggleSerial);
   server.send(200,"application/json","{\"status\":\"success\"}");
 }
 
@@ -107,6 +120,13 @@ void handleData(){
   JSONVar doc;//creates a json document inside the memory of the esp32
   doc["cm"] = distanceCm;
   doc["inch"] = distanceInch;
+  doc["a_x"] = a_x;
+  doc["a_y"] = a_y;
+  doc["a_z"] = a_z;
+  doc["g_x"] = g_x;
+  doc["g_y"] = g_y;
+  doc["g_z"] = g_z;
+  doc["temp"] = temp_c;
   server.send(200,"application/json",JSON.stringify(doc));
 }
 

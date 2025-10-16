@@ -10,7 +10,7 @@
   copies or substantial portions of the Software.
 *********/
 /*
-  This code has been adapt from the source above, but majority of the code was original.
+  This code has been adapt from the source above, but majority of the code was original to braydenleung-Git.
   Important note: There are more than 1 ways to recreate what I did, just because you got another idea does not mean it is wrong, unless you started to see magic smoke.
 */
 
@@ -20,8 +20,6 @@
 - Adafruit MPU6050 by Adafruit (click yes to install dependency)
 */
 #include "web.h"
-#include "ultrasonics.h"
-#include "imu.h"
 
 const int trigPin = 5; //GPIO 5
 const int echoPin = 18;//GPIO 18
@@ -37,7 +35,8 @@ void setup(){
 void loop(){
   dnsServer.processNextRequest();
   server.handleClient();
-  triggerSensor();
-  delay(1000);
+  triggerUltraSonics();
+  triggerIMU();
+  //delay(1000);
 }
 
