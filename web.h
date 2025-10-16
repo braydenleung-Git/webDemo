@@ -27,15 +27,15 @@ const char MAIN_page[] PROGMEM = R"=====(
 <html>
     <body>
         <label>Click to toggle the serial</label>
-        <button id='button'onclick="toggleSerial()" >Button</button>
+        <button id='button'onclick="toggleSerial()" style="background-color: red;">Disabled</button>
         <div id="serial_dataPanel">
-            <p>Distance from sensor (cm)||<label></label></p>
-            <p>Distance from sensor (in)||<label></label></p>
-            <p>Acceleration(m/s^2)|| x: <label></label>y: <label></label> z:<label></label></p>
+            <p>Distance from sensor (cm) || <label></label></p>
+            <p>Distance from sensor (in) || <label></label></p>
+            <p>Acceleration(m/s^2) ||x: <label></label>y: <label></label> z:<label></label></p>
             <p>
-            Gyro(rad/s)|| x: <label></label>y: <label></label> z:<label></label>
+            Gyro(rad/s) ||x: <label></label>y: <label></label> z:<label></label>
             </p>
-            Temperature||
+            Temperature ||
             <label></label>
         </div>
     </body>
@@ -43,30 +43,19 @@ const char MAIN_page[] PROGMEM = R"=====(
     <script>
         var toggled = true;
         async function toggleSerial(){
-            // console.log(toggled);
-            // if(!toggled){
-            //     document.getElementById('button').style.backgroundColor= 'red';
-            //     document.getElementById('button').innerHTML = 'Disabled';
-            //     toggled = true;
-            // }
-            // else{
-            //     document.getElementById('button').style.backgroundColor = 'green';
-            //     document.getElementById('button').innerHTML = 'Enabled';
-            //     toggled = false;
-            // }
-
+            console.log(toggled);
+            if(!toggled){
+                document.getElementById('button').style.backgroundColor= 'red';
+                document.getElementById('button').innerHTML = 'Disabled';
+                toggled = true;
+            }
+            else{
+                document.getElementById('button').style.backgroundColor = 'green';
+                document.getElementById('button').innerHTML = 'Enabled';
+                toggled = false;
+            }
             try {
-                const rspd = await fetch('/toggle_serial'
-                // ,{
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json'
-                //     },
-                //     body: JSON.stringify({
-                //         toggle: toggled
-                //     })
-                // }
-            );
+                const rspd = await fetch('/toggle_serial');
                 const respond = await rspd.json();
                 console.log('Toggled: ',respond);//respond either on or off
             }catch (e){
@@ -104,7 +93,7 @@ const char MAIN_page[] PROGMEM = R"=====(
             }
         }
         //make it such that at each .5 second, it will call fetchSensorData
-        setInterval(fetchSensorData,250);
+        setInterval(fetchSensorData,1000);
     </script>
 </html>
 )=====";
@@ -112,7 +101,8 @@ const char MAIN_page[] PROGMEM = R"=====(
 
 void handleSerialToggle(){
   //toggledSerial = server.arg("state");
-  triggerUltraSonics(toggleSerial);
+  toggleSerial = !toggleSerial;
+  Serial.println("Serial state changed to :"+toggleSerial);
   server.send(200,"application/json","{\"status\":\"success\"}");
 }
 

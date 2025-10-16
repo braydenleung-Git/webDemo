@@ -26,18 +26,17 @@ void triggerUltraSonics(){
     
     // Convert to inches
     distanceInch = distanceCm * CM_TO_INCH;
-  } else {
-    distanceCm = 0;
-    distanceInch = 0;
-  }
     // Prints the distance in the Serial Monitor
     Serial.print("Distance (cm): ");
     Serial.println(distanceCm);
     Serial.print("Distance (inch): ");
     Serial.println(distanceInch);
+  } else {
+    distanceCm = 0;
+    distanceInch = 0;
+  }
 }
 
 void triggerUltraSonics(bool input){
-  toggleSerial = !input;
   triggerUltraSonics();
 }

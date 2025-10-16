@@ -37,6 +37,7 @@ void loop(){
   server.handleClient();
   triggerUltraSonics();
   triggerIMU();
+  Serial.println("");
   delay(1000);
 }
 
