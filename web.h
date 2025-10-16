@@ -21,6 +21,7 @@ DNSServer dnsServer;
 WebServer server(80);
 
 //defines the web interface
+//the webpage is a direct copy of the index.html
 const char MAIN_page[] PROGMEM = R"=====(
 <!DOCTYPE html>
 <html>
