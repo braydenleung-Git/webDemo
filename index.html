@@ -1,55 +1,102 @@
 <!DOCTYPE html>
+<meta charset="UTF-8">
 <!--
     TODO:
-    - sync the button with the serial status
-        - GET serial status
-        - update the button style
-    
 -->
-
 <html>
+    <head>
+        <style>
+            body {
+                font-size: 18px;
+            }
+            #title{
+                font-size: 28px;
+            }
+            
+            @media (min-width: 768px) {
+                body {
+                font-size: 30px;
+                }
+                #title{
+                    font-size: 40px;
+                }
+            }
+        </style>
+    </head>
     <body>
-        <label>Click to toggle the serial</label>
-        <button id='button' onclick="toggleSerial()" style="background-color: red;">Disabled</button>
+        <div id="control_Panel" style="display:block;">
+            <p><label id='title'>Click button to toggle sensor </label></p>
+            <p><label>Ultrasonic:</label><button class="sensor" id="ultrasonic" onclick="toggleSerial.call(this)"></button></p>
+            <p><label>IMU:</label><button class="sensor" id="imu" onclick="toggleSerial.call(this)"></button></p>
+            <p><label>All:</label><button id="all" onclick="toggleSerial.call(this)"></button></p>
+        </div>
+        
         <div id="serial_dataPanel">
-            <p>Distance from sensor (cm) || <label></label></p>
-            <p>Distance from sensor (in) || <label></label></p>
-            <p>Acceleration(m/s^2) ||x: <label></label> y: <label></label> z:<label></label></p>
-            <p>Gyro(rad/s) ||x: <label></label>y: <label></label> z:<label></label></p>
-            Temperature ||
-            <label></label>
+            <p>Distance from sensor (cm) || <label class="sLbl"></label></p>
+            <p>Distance from sensor (in) || <label class="sLbl"></label></p>
+            <p>Acceleration(m/s^2) || x: <label class="sLbl"></label> y: <label class="sLbl"></label> z:<label class="sLbl"></label></p>
+            <p>Gyro(rad/s) || x: <label class="sLbl"></label> y: <label class="sLbl"></label> z:<label class="sLbl"></label></p>
+            Temperature || <label class="sLbl"></label>°C
         </div>
     </body>
 
     <script>
-        var toggled = true;
         async function toggleSerial(){
-            console.log(toggled);
-            if(!toggled){
-                document.getElementById('button').style.backgroundColor= 'red';
-                document.getElementById('button').innerHTML = 'Disabled';
-                toggled = true;
-            }
-            else{
-                document.getElementById('button').style.backgroundColor = 'green';
-                document.getElementById('button').innerHTML = 'Enabled';
-                toggled = false;
-            }
+            //preventing another press
+            this.disabled = true;
+            sensor_id = this.getAttribute('id');
             try {
-                const rspd = await fetch('/toggle_serial');
+                const params = new URLSearchParams();
+                params.append("sensor", sensor_id);
+                const rspd = await fetch('/toggleSensor', {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params
+                });
                 const respond = await rspd.json();
-                console.log('Toggled: ',respond);//respond either on or off
             }catch (e){
-                console.error('Action : toggle Serial failed: ',e);
+                console.error('Failed to toggle sensor',e);
+            }
+            this.disabled = false;
+            fetchSerialStatus();
+        }
+        async function fetchSerialStatus(){
+            try {
+                const rspd = await fetch('/sensorStatus');
+                const data = await rspd.json();
+                keys = Object.keys(data);
+                //if all value is true, and all the sensor are also enabled, do absolutely nothing
+                if(data[keys[0]]){
+                    //essentially take all .sensor class objects, convert the result into an array
+                    //loop through the array, if all the elements are equal to "Enabled", skip the rest of the method
+                    if(Array.from(document.querySelectorAll(".sensor")).every(element=> element.innerHTML === "Enabled")){
+                        return;
+                    }
+                }
+                for (const key of keys) {
+                    var toggled = data[key];
+                    element = document.getElementById(key);
+                    if (!element) continue;
+                    if(!toggled){
+                        element.style.backgroundColor= 'red';
+                        element.innerHTML = 'Disabled';
+                    }
+                    else{
+                        element.style.backgroundColor = 'green';
+                        element.innerHTML = 'Enabled';
+                    }
+                }
+            } catch (e){
+                console.error('Failed to fetch Serial Status',e);
             }
         }
-        var cm;
-        var inch;
+        var cm, inch, a_x, a_y, a_z, g_x, g_y, g_z, temp;
+
         async function fetchSensorData(){
             try{
-                const rspd = await fetch('/serial_data');
+                const rspd = await fetch('/serialData');
                 const data = await rspd.json();
-                cm = data.cm || 0;
+                cm = data.cm || 0;//shorthand, if there is no data for the first value, replace it with the other
                 inch = data.inch || 0;
                 a_x = data.a_x || 0;
                 a_y = data.a_y || 0;
@@ -66,21 +113,27 @@
 
         function updateData(){
             try{
-                labels = document.querySelectorAll('label');
-                labels[1].innerText = cm;
-                labels[2].innerText = inch;
-                labels[3].innerText = a_x;
-                labels[4].innerText = a_y;
-                labels[5].innerText = a_z;
-                labels[6].innerText = g_x;
-                labels[7].innerText = g_y;
-                labels[8].innerText = g_z;
-                labels[9].innerText = temp;
+                labels = document.querySelectorAll(".sLbl");
+                labels[0].innerText = cm;
+                labels[1].innerText = inch;
+                labels[2].innerText = a_x;
+                labels[3].innerText = a_y;
+                labels[4].innerText = a_z;
+                labels[5].innerText = g_x;
+                labels[6].innerText = g_y;
+                labels[7].innerText = g_z;
+                labels[8].innerText = temp;
             }catch (e){
                 console.error('Failed to update labels',e);
             }
         }
-        //make it such that at each .5 second, it will call fetchSensorData
-        setInterval(fetchSensorData,1000);
+        //make it such that at each 1 second, it will call fetchSensorData
+        //don't go lower than 1 second
+        //these are just two ways of how you can run a method
+        setInterval(fetchSerialStatus(),2000);
+        //this is called a lambda function/body,google it 
+        setInterval(()=>{
+            fetchSensorData();
+        },1000)
     </script>
 </html>

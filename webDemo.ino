@@ -28,6 +28,7 @@ const int echoPin = 18;//GPIO 18
 
 void setup(){
   Serial.begin(115200); // Starts the serial communication
+  Serial.println("ESP has started");
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
   setupWebServer();
@@ -40,7 +41,7 @@ void loop(){
   server.handleClient();
   triggerUltraSonics();
   triggerIMU();
-  Serial.println("");
+  //Serial.println("");
   delay(1000);
 }
 

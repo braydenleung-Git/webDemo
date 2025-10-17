@@ -3,13 +3,13 @@
 #include <Wire.h> //Library that communicate to I2C-device 
 
 
-Adafruit_MPU6050 sensor;
+Adafruit_MPU6050 imuSensor;
 float a_x, a_y, a_z, g_x,g_y,g_z, temp_c;
-extern bool toggleSerial;
+bool toggleIMU = false;
 
 void setupIMU(){
   //Try to initialize!
-  if (!sensor.begin()) {
+  if (!imuSensor.begin()) {
     Serial.println("Failed to find MPU6050 chip");
     while (1) {
       delay(10);
@@ -22,7 +22,7 @@ void setupIMU(){
     MPU6050_RANGE_4_G (+-4G)
     MPU6050_RANGE_16_G (+-16G)
   */
-  sensor.setAccelerometerRange(MPU6050_RANGE_8_G);
+  imuSensor.setAccelerometerRange(MPU6050_RANGE_8_G);
 
   /*
     Other range options: (+-n deg/s)
@@ -30,7 +30,7 @@ void setupIMU(){
     MPU6050_RANGE_1000_DEG
     MPU6050_RANGE_2000_DEG 
   */
-  sensor.setGyroRange(MPU6050_RANGE_500_DEG);
+  imuSensor.setGyroRange(MPU6050_RANGE_500_DEG);
 
   /*
     Other filter options: (+-n Hz)(lower = smoother/less fluctuation)
@@ -42,14 +42,14 @@ void setupIMU(){
     MPU6050_BAND_10_HZ
     MPU6050_BAND_5_HZ
   */
-  sensor.setFilterBandwidth(MPU6050_BAND_5_HZ);
+  imuSensor.setFilterBandwidth(MPU6050_BAND_5_HZ);
 }
 
 void triggerIMU(){
-  if(toggleSerial){
+  if(toggleIMU){
     /* Get new sensor events with the readings */
     sensors_event_t a, g, temp;
-    sensor.getEvent(&a, &g, &temp);
+    imuSensor.getEvent(&a, &g, &temp);
     //m/s^2
     a_x = a.acceleration.x;
     a_y = a.acceleration.y;
@@ -60,9 +60,9 @@ void triggerIMU(){
     g_z = g.gyro.z;
     //deg(C)
     temp_c = temp.temperature;
-    Serial.println("Acceleration: \nx: "+String(a_x)+"\ny: "+String(a_y)+"\nz: "+String(a_z));
-    Serial.println("Gyro: \nx: "+String(g_x)+"\ny: "+String(g_y)+"\nz: "+String(g_z));
-    Serial.println("Temperature: "+String(temp_c));
+    // Serial.println("Acceleration: \nx: "+String(a_x)+"\ny: "+String(a_y)+"\nz: "+String(a_z));
+    // Serial.println("Gyro: \nx: "+String(g_x)+"\ny: "+String(g_y)+"\nz: "+String(g_z));
+    // Serial.println("Temperature: "+String(temp_c));
   } else {
     a_x = 0;
     a_y = 0;

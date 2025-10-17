@@ -2,7 +2,7 @@ extern const int trigPin,echoPin;
 long duration;
 float distanceCm;
 float distanceInch;
-extern bool toggleSerial;;
+bool toggleUltraSonics = false;
 
 
 //define sound speed in cm/uS
@@ -10,7 +10,7 @@ extern bool toggleSerial;;
 #define CM_TO_INCH 0.393701
 
 void triggerUltraSonics(){
-  if(toggleSerial){
+  if(toggleUltraSonics){
     // Clears the trigPin
     digitalWrite(trigPin, LOW);
     delayMicroseconds(5);
@@ -27,16 +27,12 @@ void triggerUltraSonics(){
     // Convert to inches
     distanceInch = distanceCm * CM_TO_INCH;
     // Prints the distance in the Serial Monitor
-    Serial.print("Distance (cm): ");
-    Serial.println(distanceCm);
-    Serial.print("Distance (inch): ");
-    Serial.println(distanceInch);
+    // Serial.print("Distance (cm): ");
+    // Serial.println(distanceCm);
+    // Serial.print("Distance (inch): ");
+    // Serial.println(distanceInch);
   } else {
     distanceCm = 0;
     distanceInch = 0;
   }
-}
-
-void triggerUltraSonics(bool input){
-  triggerUltraSonics();
 }

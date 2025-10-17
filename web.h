@@ -9,6 +9,7 @@
 
 
 bool toggleSerial = false;
+extern bool toggleIMU, toggleUltraSonics;
 extern float distanceCm, distanceInch;
 extern float a_x, a_y, a_z, g_x, g_y, g_z, temp_c;
 extern void triggerUltraSonics(bool);
@@ -24,49 +25,104 @@ WebServer server(80);
 //the webpage is a direct copy of the index.html
 const char MAIN_page[] PROGMEM = R"=====(
 <!DOCTYPE html>
+<meta charset="UTF-8">
+<!--
+    TODO:
+-->
 <html>
+    <head>
+        <style>
+            body {
+                font-size: 18px;
+            }
+            #title{
+                font-size: 28px;
+            }
+            
+            @media (min-width: 768px) {
+                body {
+                font-size: 30px;
+                }
+                #title{
+                    font-size: 40px;
+                }
+            }
+        </style>
+    </head>
     <body>
-        <label>Click to toggle the serial</label>
-        <button id='button' onclick="toggleSerial()" style="background-color: red;">Disabled</button>
+        <div id="control_Panel" style="display:block;">
+            <p><label id='title'>Click button to toggle sensor </label></p>
+            <p><label>Ultrasonic:</label><button class="sensor" id="ultrasonic" onclick="toggleSerial.call(this)"></button></p>
+            <p><label>IMU:</label><button class="sensor" id="imu" onclick="toggleSerial.call(this)"></button></p>
+            <p><label>All:</label><button id="all" onclick="toggleSerial.call(this)"></button></p>
+        </div>
+        
         <div id="serial_dataPanel">
-            <p>Distance from sensor (cm) || <label></label></p>
-            <p>Distance from sensor (in) || <label></label></p>
-            <p>Acceleration(m/s^2) ||x: <label></label> y: <label></label> z:<label></label></p>
-            <p>Gyro(rad/s) ||x: <label></label>y: <label></label> z:<label></label></p>
-            Temperature ||
-            <label></label>
+            <p>Distance from sensor (cm) || <label class="sLbl"></label></p>
+            <p>Distance from sensor (in) || <label class="sLbl"></label></p>
+            <p>Acceleration(m/s^2) || x: <label class="sLbl"></label> y: <label class="sLbl"></label> z:<label class="sLbl"></label></p>
+            <p>Gyro(rad/s) || x: <label class="sLbl"></label> y: <label class="sLbl"></label> z:<label class="sLbl"></label></p>
+            Temperature || <label class="sLbl"></label>°C
         </div>
     </body>
 
     <script>
-        var toggled = true;
         async function toggleSerial(){
-            console.log(toggled);
-            if(!toggled){
-                document.getElementById('button').style.backgroundColor= 'red';
-                document.getElementById('button').innerHTML = 'Disabled';
-                toggled = true;
-            }
-            else{
-                document.getElementById('button').style.backgroundColor = 'green';
-                document.getElementById('button').innerHTML = 'Enabled';
-                toggled = false;
-            }
+            //preventing another press
+            this.disabled = true;
+            sensor_id = this.getAttribute('id');
             try {
-                const rspd = await fetch('/toggle_serial');
+                const params = new URLSearchParams();
+                params.append("sensor", sensor_id);
+                const rspd = await fetch('/toggleSensor', {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params
+                });
                 const respond = await rspd.json();
-                console.log('Toggled: ',respond);//respond either on or off
             }catch (e){
-                console.error('Action : toggle Serial failed: ',e);
+                console.error('Failed to toggle sensor',e);
+            }
+            this.disabled = false;
+            fetchSerialStatus();
+        }
+        async function fetchSerialStatus(){
+            try {
+                const rspd = await fetch('/sensorStatus');
+                const data = await rspd.json();
+                keys = Object.keys(data);
+                //if all value is true, and all the sensor are also enabled, do absolutely nothing
+                if(data[keys[0]]){
+                    //essentially take all .sensor class objects, convert the result into an array
+                    //loop through the array, if all the elements are equal to "Enabled", skip the rest of the method
+                    if(Array.from(document.querySelectorAll(".sensor")).every(element=> element.innerHTML === "Enabled")){
+                        return;
+                    }
+                }
+                for (const key of keys) {
+                    var toggled = data[key];
+                    element = document.getElementById(key);
+                    if (!element) continue;
+                    if(!toggled){
+                        element.style.backgroundColor= 'red';
+                        element.innerHTML = 'Disabled';
+                    }
+                    else{
+                        element.style.backgroundColor = 'green';
+                        element.innerHTML = 'Enabled';
+                    }
+                }
+            } catch (e){
+                console.error('Failed to fetch Serial Status',e);
             }
         }
-        var cm;
-        var inch;
+        var cm, inch, a_x, a_y, a_z, g_x, g_y, g_z, temp;
+
         async function fetchSensorData(){
             try{
-                const rspd = await fetch('/serial_data');
+                const rspd = await fetch('/serialData');
                 const data = await rspd.json();
-                cm = data.cm || 0;
+                cm = data.cm || 0;//shorthand, if there is no data for the first value, replace it with the other
                 inch = data.inch || 0;
                 a_x = data.a_x || 0;
                 a_y = data.a_y || 0;
@@ -83,70 +139,108 @@ const char MAIN_page[] PROGMEM = R"=====(
 
         function updateData(){
             try{
-                labels = document.querySelectorAll('label');
-                labels[1].innerText = cm;
-                labels[2].innerText = inch;
-                labels[3].innerText = a_x;
-                labels[4].innerText = a_y;
-                labels[5].innerText = a_z;
-                labels[6].innerText = g_x;
-                labels[7].innerText = g_y;
-                labels[8].innerText = g_z;
-                labels[9].innerText = temp;
+                labels = document.querySelectorAll(".sLbl");
+                labels[0].innerText = cm;
+                labels[1].innerText = inch;
+                labels[2].innerText = a_x;
+                labels[3].innerText = a_y;
+                labels[4].innerText = a_z;
+                labels[5].innerText = g_x;
+                labels[6].innerText = g_y;
+                labels[7].innerText = g_z;
+                labels[8].innerText = temp;
             }catch (e){
                 console.error('Failed to update labels',e);
             }
         }
-        //make it such that at each .5 second, it will call fetchSensorData
-        setInterval(fetchSensorData,1000);
+        //make it such that at each 1 second, it will call fetchSensorData
+        //don't go lower than 1 second
+        //these are just two ways of how you can run a method
+        setInterval(fetchSerialStatus(),2000);
+        //this is called a lambda function/body,google it 
+        setInterval(()=>{
+            fetchSensorData();
+        },1000)
     </script>
 </html>
 )=====";
 
 
-void handleSerialToggle(){
-  //toggledSerial = server.arg("state");
-  toggleSerial = !toggleSerial;
-  Serial.println("Serial state changed to :"+toggleSerial);
-  server.send(200,"application/json","{\"status\":\"success\"}");
+void handleSensorToggle(){
+    String sensor = server.arg("sensor");
+    if(sensor.equals("all")){
+        toggleSerial = !toggleSerial;
+        Serial.println(toggleSerial);
+        toggleUltraSonics = toggleSerial;
+        toggleIMU = toggleSerial;
+        Serial.println(sensor + " sensor state changed to :"+toggleSerial);
+        server.send(200,"application/json","{\"status\":\"success\"}");
+    } else {
+    //cpp can do string based switch...case, but not java !
+    Serial.print(sensor);
+    switch (sensor.charAt(0)){
+        case 'u' :
+            toggleUltraSonics = !toggleUltraSonics;
+            Serial.println(sensor + " sensor state changed to :"+toggleUltraSonics);
+            server.send(200,"application/json","{\"status\":\"success\"}");
+            toggleSerial = toggleSerial? !toggleSerial : toggleSerial;
+            break;
+        case 'i':
+            toggleIMU = !toggleIMU;
+            Serial.println(sensor + " sensor state changed to :"+toggleIMU);
+            server.send(200,"application/json","{\"status\":\"success\"}");
+            toggleSerial = toggleSerial? !toggleSerial : toggleSerial;
+            break;
+        default : 
+            Serial.println("Error : Unexpected sensor data");
+            server.send(404,"application/json","Sensor value not found");//unsure if this is correct
+        }
+    }
 }
 
 void handleData(){
-  JSONVar doc;//creates a json document inside the memory of the esp32
-  doc["cm"] = distanceCm;
-  doc["inch"] = distanceInch;
-  doc["a_x"] = a_x;
-  doc["a_y"] = a_y;
-  doc["a_z"] = a_z;
-  doc["g_x"] = g_x;
-  doc["g_y"] = g_y;
-  doc["g_z"] = g_z;
-  doc["temp"] = temp_c;
-  server.send(200,"application/json",JSON.stringify(doc));
-  delete doc;
+    JSONVar doc;//creates a json document inside the memory of the esp32
+    doc["cm"] = distanceCm;
+    doc["inch"] = distanceInch;
+    doc["a_x"] = a_x;
+    doc["a_y"] = a_y;
+    doc["a_z"] = a_z;
+    doc["g_x"] = g_x;
+    doc["g_y"] = g_y;
+    doc["g_z"] = g_z;
+    doc["temp"] = temp_c;
+    server.send(200,"application/json",JSON.stringify(doc));
 }
 
+void handleSensorStatus(){
+    //Serial.println("Sensor Status Update Requested");
+    JSONVar doc;
+    doc["all"] = toggleSerial;
+    doc["ultrasonic"] = toggleUltraSonics;
+    doc["imu"] = toggleIMU;
+    server.send(200,"application/json",JSON.stringify(doc));
+}
 //This method is meant more than just the index request, but also any error, 
 void handleAllRequests(){
-  server.send(200, "text/html", MAIN_page);
+    server.send(200, "text/html", MAIN_page);
 }
 
 void setupWebServer(void){
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(ssid, password);
-  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-  Serial.println("Wi-Fi AP started at 192.168.4.1");
-  dnsServer.start(DNS_PORT, "*", apIP);
-  delay(100);
-  Serial.println(F(""));
-  IPAddress myIP = WiFi.softAPIP();
-  Serial.print(F("AP IP address: "));
-  Serial.println(myIP);
-  server.on("/",HTTP_GET,handleAllRequests);
-  //handles serial toggle
-  server.on("/toggle_serial",HTTP_GET, handleSerialToggle);
-  server.onNotFound(handleAllRequests);//refresh the page upon error(not sure why)
-
-  server.on("/serial_data",HTTP_GET, handleData);
-  server.begin();
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(ssid, password);
+    WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+    Serial.println("Webpage started hosting at 192.168.4.1");
+    dnsServer.start(DNS_PORT, "*", apIP);
+    delay(100);
+    Serial.println(F(""));
+    IPAddress myIP = WiFi.softAPIP();
+    Serial.print(F("AP IP address: "));
+    Serial.println(myIP);
+    server.on("/",HTTP_GET,handleAllRequests);
+    //handles serial toggle
+    server.on("/toggleSensor",HTTP_POST, handleSensorToggle);
+    server.on("/serialData",HTTP_GET, handleData);
+    server.on("/sensorStatus",HTTP_GET,handleSensorStatus);
+    server.onNotFound(handleAllRequests);//refresh the page upon error(not sure why)
+    server.begin();
 }
