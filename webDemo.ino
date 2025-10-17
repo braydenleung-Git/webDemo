@@ -21,8 +21,10 @@
 */
 #include "web.h"
 
+
 const int trigPin = 5; //GPIO 5
 const int echoPin = 18;//GPIO 18
+
 
 void setup(){
   Serial.begin(115200); // Starts the serial communication
@@ -30,10 +32,11 @@ void setup(){
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
   setupWebServer();
   setupIMU();
+  
 }
 
 void loop(){
-  //dnsServer.processNextRequest();
+  dnsServer.processNextRequest();
   server.handleClient();
   triggerUltraSonics();
   triggerIMU();

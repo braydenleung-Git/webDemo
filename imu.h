@@ -8,13 +8,13 @@ float a_x, a_y, a_z, g_x,g_y,g_z, temp_c;
 extern bool toggleSerial;
 
 void setupIMU(){
-  // Try to initialize!
-  // if (!sensor.begin()) {
-  //   Serial.println("Failed to find MPU6050 chip");
-  //   while (1) {
-  //     delay(10);
-  //   }
-  // }
+  //Try to initialize!
+  if (!sensor.begin()) {
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) {
+      delay(10);
+    }
+  }
   Serial.println("MPU6050 Found!");
   /*
     Other range options: (+-n G,G = G-force)(normal people can sustain up to 4-6G before passing out!)
@@ -63,7 +63,7 @@ void triggerIMU(){
     Serial.println("Acceleration: \nx: "+String(a_x)+"\ny: "+String(a_y)+"\nz: "+String(a_z));
     Serial.println("Gyro: \nx: "+String(g_x)+"\ny: "+String(g_y)+"\nz: "+String(g_z));
     Serial.println("Temperature: "+String(temp_c));
-  }else{
+  } else {
     a_x = 0;
     a_y = 0;
     a_z = 0;

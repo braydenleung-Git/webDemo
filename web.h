@@ -10,7 +10,7 @@
 
 bool toggleSerial = false;
 extern float distanceCm, distanceInch;
-extern float a_x, a_y, a_z, g_x,g_y,g_z, temp_c;
+extern float a_x, a_y, a_z, g_x, g_y, g_z, temp_c;
 extern void triggerUltraSonics(bool);
 const char *ssid = "webServer";
 const char *password = "12345678";
@@ -27,14 +27,12 @@ const char MAIN_page[] PROGMEM = R"=====(
 <html>
     <body>
         <label>Click to toggle the serial</label>
-        <button id='button'onclick="toggleSerial()" style="background-color: red;">Disabled</button>
+        <button id='button' onclick="toggleSerial()" style="background-color: red;">Disabled</button>
         <div id="serial_dataPanel">
             <p>Distance from sensor (cm) || <label></label></p>
             <p>Distance from sensor (in) || <label></label></p>
-            <p>Acceleration(m/s^2) ||x: <label></label>y: <label></label> z:<label></label></p>
-            <p>
-            Gyro(rad/s) ||x: <label></label>y: <label></label> z:<label></label>
-            </p>
+            <p>Acceleration(m/s^2) ||x: <label></label> y: <label></label> z:<label></label></p>
+            <p>Gyro(rad/s) ||x: <label></label>y: <label></label> z:<label></label></p>
             Temperature ||
             <label></label>
         </div>
@@ -70,6 +68,13 @@ const char MAIN_page[] PROGMEM = R"=====(
                 const data = await rspd.json();
                 cm = data.cm || 0;
                 inch = data.inch || 0;
+                a_x = data.a_x || 0;
+                a_y = data.a_y || 0;
+                a_z = data.a_z || 0;
+                g_x = data.g_x || 0;
+                g_y = data.g_y || 0;
+                g_z = data.g_z || 0;
+                temp = data.temp || 0;
             }catch (e){
                 console.error('Failed to fetch sensor data',e);
             }
@@ -118,6 +123,7 @@ void handleData(){
   doc["g_z"] = g_z;
   doc["temp"] = temp_c;
   server.send(200,"application/json",JSON.stringify(doc));
+  delete doc;
 }
 
 //This method is meant more than just the index request, but also any error, 
